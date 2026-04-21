@@ -6,6 +6,9 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.action_chains import ActionChains
 
+import pandas as pd
+import numpy as np
+
 import time
 
 driver = webdriver.Chrome()
@@ -108,3 +111,75 @@ while True:
 
 
 driver.quit()
+
+
+# _________DATA CLEANING________________
+
+stocks_df = (
+    pd
+    .DataFrame(data)
+
+    # Strip spaces from text columns
+    .apply(
+        lambda col: col.str.strip()
+        if col.dtype == "object"
+        else col
+    )
+
+    .assign(
+
+        # Price
+        price=lambda df_:
+            pd.to_numeric(
+                df_.price,
+                errors="coerce"
+            ),
+
+        # Change
+        change=lambda df_:
+            pd.to_numeric(
+                df_.change
+                    .replace(["-", "--", "N/A"], np.nan)
+                    .str.replace("+", "", regex=False),
+                errors="coerce"
+            ),
+
+        # Volume (assumes M values)
+        volume=lambda df_:
+            pd.to_numeric(
+                df_.volume
+                    .replace(["-", "--", "N/A"], np.nan)
+                    .str.replace("M", "", regex=False),
+                errors="coerce"
+            ),
+
+        # Market cap -> convert all to Billions
+        market_cap=lambda df_:
+            df_.market_cap.apply(
+                lambda val:
+                    np.nan if pd.isna(val) or val in ["-", "--", "N/A"] else
+                    float(val.replace("M", ""))/1000 if "M" in val else
+                    float(val.replace("B", "")) if "B" in val else
+                    float(val.replace("T", ""))*1000 if "T" in val else
+                    np.nan
+            ),
+
+        # P/E ratio
+        pe_ratio=lambda df_:
+            pd.to_numeric(
+                df_.pe_ratio
+                    .replace(["-", "--", "N/A"], np.nan)
+                    .str.replace(",", "", regex=False),
+                errors="coerce"
+            )
+    )
+
+    .rename(columns={
+        "price": "price_usd",
+        "volume": "volume_M",
+        "market_cap": "market_cap_B"
+    })
+)
+
+stocks_df.to_csv("yahoo-stocks-data.csv",index=False)
+stocks_df.to_excel("yahoo-stocks-data-excel.xlsx", index=False)
