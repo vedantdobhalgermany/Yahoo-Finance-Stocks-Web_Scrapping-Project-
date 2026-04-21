@@ -55,6 +55,11 @@ actions.move_to_element(trending_tickers).perform()
 trending_tickers_click = wait.until(EC.element_to_be_clickable((By.XPATH, '/html[1]/body[1]/div[1]/header[1]/div[1]/nav[1]/ol[1]/li[3]/ol[1]/li[1]/ol[1]/li[4]/a[1]')))
 trending_tickers_click.click()
 
+# Click on Most Active
+most_active = wait.until(EC.element_to_be_clickable((By.XPATH,'/html[1]/body[1]/div[1]/div[4]/main[1]/section[1]/section[1]/section[1]/section[1]/section[1]/div[1]/div[1]/div[1]/a[1]')))
+most_active.click()
+wait_for_page_to_load(driver,wait)
+
 
 time.sleep(2)
 driver.quit()
