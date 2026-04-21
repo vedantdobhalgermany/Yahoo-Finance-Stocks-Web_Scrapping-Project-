@@ -73,13 +73,30 @@ most_active.click()
 wait_for_page_to_load(driver,wait)
 
 # scraping the data
+data = []
 while True:
     # scraping
+    wait.until(EC.presence_of_element_located((By.TAG_NAME,"table")))
+    rows = driver.find_elements(By.CSS_SELECTOR,"table tbody tr")
+
+    for row in rows:
+        values = row.find_elements(By.TAG_NAME,"td")
+        stock = {
+            "name": values[1].text,
+			"symbol": values[0].text,
+			"price": values[3].text,
+			"change": values[4].text,
+			"volume": values[6].text,
+			"market_cap": values[8].text,
+			"pe_ratio": values[9].text,
+        }
+        data.append(stock)
+        
     
 
     # click next
     try:
-        next_button = wait.until(EC.element_to_be_clickable((By.XPATH,'/html/body/div[1]/div[4]/main/section/section/section/section/section[1]/div/div[4]/div[3]/button[3]/div/svg')))
+        next_button = wait.until(EC.element_to_be_clickable((By.XPATH,'/html/body/div[1]/div[4]/main/section/section/section/section/section[1]/div/div[4]/div[3]/button[3]')))
     except:
         print("The \"next button\" is not clickable. We have navigated through all the pages.")
         break
@@ -90,6 +107,4 @@ while True:
 
 
 
-
-time.sleep(2)
 driver.quit()
